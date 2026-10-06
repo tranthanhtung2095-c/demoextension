@@ -1,12 +1,12 @@
 /* =========================================================
    Service worker: turns the chat transcript into the next
-   question by calling the Claude Messages API.
+   question by calling the DeepSeek chat completions API.
    Without an API key it falls back to a built-in question bank,
    so the demo still runs offline.
    ========================================================= */
 importScripts("defaults.js");
 
-const API_URL = "https://api.anthropic.com/v1/messages";
+const API_URL = "https://api.deepseek.com/chat/completions";
 const REQUEST_TIMEOUT_MS = 60000;
 
 const OFFLINE_QUESTIONS = [
@@ -34,10 +34,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
 async function generateQuestion({ history = [], pageContext = "", persona = "", turn = 1, total = 5 }) {
   const settings = { ...DEMO_DEFAULTS, ...(await chrome.storage.local.get(Object.keys(DEMO_DEFAULTS))) };
-  if (!settings.apiKey.trim()) {
+  // A model saved by an older version (e.g. a Claude model) falls back to the default.
+  if (!DEMO_MODELS.some((m) => m.id === settings.model)) settings.model = DEMO_DEFAULTS.model;
+  if (!settings.deepseekKey.trim()) {
     return { question: offlineQuestion(history), source: "offline" };
   }
-  const question = await askClaude(settings, { history, pageContext, persona, turn, total });
+  const question = await askDeepSeek(settings, { history, pageContext, persona, turn, total });
   return { question, source: settings.model };
 }
 
@@ -84,38 +86,35 @@ function buildPrompt({ history, pageContext, persona, turn, total }) {
   return { system, user };
 }
 
-async function askClaude(settings, args) {
+async function askDeepSeek(settings, args) {
   const { system, user } = buildPrompt(args);
-  const isHaiku = settings.model.startsWith("claude-haiku");
-
-  const headers = {
-    "content-type": "application/json",
-    "x-api-key": settings.apiKey.trim(),
-    "anthropic-version": "2023-06-01",
-    // Required for requests that carry a browser/extension Origin header.
-    "anthropic-dangerous-direct-browser-access": "true",
-  };
-  const body = {
-    model: settings.model,
-    max_tokens: 4000,
-    system,
-    messages: [{ role: "user", content: user }],
-  };
-  if (!isHaiku) {
-    // A one-line question is a simple task: keep thinking short so the demo stays snappy.
-    body.output_config = { effort: "low" };
-    // Retry on a fallback model if the request is ever declined by a safety classifier.
-    headers["anthropic-beta"] = "server-side-fallback-2026-07-01";
-    body.fallbacks = "default";
-  }
+  const { model } = settings;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   let res;
   try {
-    res = await fetch(API_URL, { method: "POST", headers, body: JSON.stringify(body), signal: controller.signal });
+    // OpenAI-compatible chat completions endpoint.
+    res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${settings.deepseekKey.trim()}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        max_tokens: model === "deepseek-reasoner" ? 4000 : 200,
+        temperature: 0.9, // some variety between demo runs (ignored by deepseek-reasoner)
+        stream: false,
+      }),
+      signal: controller.signal,
+    });
   } catch (err) {
-    throw new Error(err.name === "AbortError" ? "Claude phản hồi quá lâu, thử lại nhé." : `Không gọi được Claude API: ${err.message}`);
+    throw new Error(err.name === "AbortError" ? "DeepSeek phản hồi quá lâu, thử lại nhé." : `Không gọi được DeepSeek API: ${err.message}`);
   } finally {
     clearTimeout(timer);
   }
@@ -123,21 +122,14 @@ async function askClaude(settings, args) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const detail = data?.error?.message || `HTTP ${res.status}`;
-    if (res.status === 401) throw new Error("API key không hợp lệ. Kiểm tra lại trong cửa sổ cài đặt của extension.");
-    if (res.status === 429) throw new Error("Claude API đang giới hạn tần suất, đợi một chút rồi chạy lại.");
-    throw new Error(`Claude API lỗi: ${detail}`);
-  }
-  if (data.stop_reason === "refusal") {
-    throw new Error("Claude từ chối tạo câu hỏi cho lượt này.");
+    if (res.status === 401) throw new Error("DeepSeek API key không hợp lệ. Kiểm tra lại trong cửa sổ cài đặt của extension.");
+    if (res.status === 402) throw new Error("Tài khoản DeepSeek đã hết số dư, hãy nạp thêm.");
+    if (res.status === 429) throw new Error("DeepSeek đang giới hạn tần suất, đợi một chút rồi chạy lại.");
+    throw new Error(`DeepSeek API lỗi: ${detail}`);
   }
 
-  const text = (data.content || [])
-    .filter((b) => b.type === "text")
-    .map((b) => b.text)
-    .join("")
-    .trim();
-  const question = cleanQuestion(text);
-  if (!question) throw new Error("Claude không trả về câu hỏi nào.");
+  const question = cleanQuestion(data?.choices?.[0]?.message?.content || "");
+  if (!question) throw new Error("DeepSeek không trả về câu hỏi nào.");
   return question;
 }
 

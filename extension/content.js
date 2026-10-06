@@ -4,7 +4,7 @@
      .chat__fab  → floating button that opens the panel
      .chat__log  → messages (.chat__msg--user / .chat__msg--bot)
      .chat__form → textarea + submit button
-   When the visitor opens the chat, Claude plays a prospective
+   When the visitor opens the chat, DeepSeek plays a prospective
    student: it writes a question, "types" it into the box, sends it,
    waits for the landing page's assistant to finish answering, and
    repeats for the configured number of turns.
@@ -165,7 +165,7 @@
     const s = await getSettings();
     const persona = resolvePersona(s);
     const total = Math.max(1, Math.min(10, Number(s.turns) || DEMO_DEFAULTS.turns));
-    const usingClaude = !!s.apiKey.trim();
+    const usingAI = !!s.deepseekKey.trim();
     showHud();
 
     try {
@@ -177,7 +177,7 @@
       }
 
       for (let turn = 1; turn <= total && !current.stopped; turn++) {
-        setStatus(`Câu ${turn}/${total} · ${usingClaude ? "Claude đang nghĩ câu hỏi…" : "Đang chọn câu hỏi…"}`);
+        setStatus(`Câu ${turn}/${total} · ${usingAI ? "DeepSeek đang nghĩ câu hỏi…" : "Đang chọn câu hỏi…"}`);
         const reply = await chrome.runtime.sendMessage({
           type: "generate-question",
           history: readHistory(),
@@ -231,7 +231,7 @@
       hud = document.createElement("div");
       hud.className = "mci-demo-hud";
       hud.innerHTML = `
-        <span class="mci-demo-hud__badge">Claude</span>
+        <span class="mci-demo-hud__badge">AI</span>
         <span class="mci-demo-hud__text"></span>
         <button type="button"></button>`;
       hud.querySelector("button").addEventListener("click", () => (run ? stopDemo("Đã dừng.") : hideHud()));

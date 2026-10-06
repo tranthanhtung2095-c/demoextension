@@ -3,7 +3,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const FIELDS = ["apiKey", "model", "persona", "customPersona", "turns", "typingMs", "pauseMs", "autoStart", "freshConversation"];
+  const FIELDS = ["deepseekKey", "model", "persona", "customPersona", "turns", "typingMs", "pauseMs", "autoStart", "freshConversation"];
   const statusEl = $("status");
 
   /* ---------- Settings ---------- */
@@ -12,6 +12,7 @@
 
   chrome.storage.local.get(FIELDS).then((saved) => {
     const s = { ...DEMO_DEFAULTS, ...saved };
+    if (!DEMO_MODELS.some((m) => m.id === s.model)) s.model = DEMO_DEFAULTS.model;
     for (const f of FIELDS) {
       const el = $(f);
       if (el.type === "checkbox") el.checked = !!s[f];
@@ -95,7 +96,7 @@
     const out = $("testOut");
     out.hidden = false;
     out.classList.remove("is-error");
-    out.textContent = "Đang hỏi Claude…";
+    out.textContent = "Đang hỏi DeepSeek…";
     $("test").disabled = true;
     const s = { ...DEMO_DEFAULTS, ...(await chrome.storage.local.get(FIELDS)) };
     const personaKey = s.persona === "random" ? "office" : s.persona;

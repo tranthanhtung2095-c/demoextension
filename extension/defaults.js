@@ -1,8 +1,8 @@
 /* Shared defaults — loaded by background.js (importScripts) and popup.html. */
 /* eslint-disable no-unused-vars */
 const DEMO_DEFAULTS = {
-  apiKey: "",
-  model: "claude-opus-5-5",
+  deepseekKey: "",
+  model: "deepseek-chat",
   persona: "office",
   customPersona: "",
   turns: 5,
@@ -13,9 +13,8 @@ const DEMO_DEFAULTS = {
 };
 
 const DEMO_MODELS = [
-  { id: "claude-opus-5-5", label: "Claude Opus 5.5 (mặc định)" },
-  { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5 (nhanh hơn)" },
-  { id: "claude-haiku-4-5", label: "Claude Haiku 4.5 (nhanh nhất)" },
+  { id: "deepseek-chat", label: "DeepSeek Chat (mặc định, nhanh)" },
+  { id: "deepseek-reasoner", label: "DeepSeek Reasoner (suy luận, chậm hơn)" },
 ];
 
 const DEMO_PERSONAS = {
