@@ -1,0 +1,70 @@
+/* Status pill shown on the landing page while the demo runs. */
+.mci-demo-hud {
+  position: fixed;
+  top: 88px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 8px 8px 8px 10px;
+  border-radius: 999px;
+  background: #1f1a17;
+  color: #fff;
+  font: 500 14px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  animation: mci-demo-hud-in 0.25s ease-out;
+}
+.mci-demo-hud[hidden] { display: none; }
+.mci-demo-hud.is-error { background: #9b1c1c; }
+
+.mci-demo-hud__badge {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff6a00, #ff9a3c);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+.mci-demo-hud__badge::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #fff;
+  vertical-align: 1px;
+  animation: mci-demo-pulse 1.2s ease-in-out infinite;
+}
+.mci-demo-hud__text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.mci-demo-hud button {
+  flex: none;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mci-demo-hud button:hover { background: rgba(255, 255, 255, 0.28); }
+
+@keyframes mci-demo-hud-in {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@keyframes mci-demo-pulse {
+  50% { opacity: 0.3; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mci-demo-hud, .mci-demo-hud__badge::before { animation: none; }
+}

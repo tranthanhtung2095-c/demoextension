@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>MCI Chat Demo</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <span class="logo">MCI</span>
+    <div>
+      <b>Chat Demo</b>
+      <small>Claude đóng vai học viên, tự đặt câu hỏi</small>
+    </div>
+  </header>
+
+  <section class="run">
+    <p id="status" class="status">Đang kiểm tra trang…</p>
+    <div class="row">
+      <button id="start" class="primary" type="button">▶ Chạy demo</button>
+      <button id="stop" type="button">■ Dừng</button>
+    </div>
+  </section>
+
+  <form id="settings">
+    <label>
+      Claude API key
+      <input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+      <small>Để trống = dùng bộ câu hỏi soạn sẵn (không cần mạng tới Claude).</small>
+    </label>
+
+    <label>
+      Model
+      <select id="model"></select>
+    </label>
+
+    <label>
+      Vai người hỏi
+      <select id="persona"></select>
+    </label>
+    <label id="customWrap" hidden>
+      Mô tả vai
+      <textarea id="customPersona" rows="3" placeholder="VD: Giáo viên cấp 3 muốn dùng Claude để soạn giáo án…"></textarea>
+    </label>
+
+    <div class="grid">
+      <label>
+        Số câu hỏi
+        <input id="turns" type="number" min="1" max="10">
+      </label>
+      <label>
+        Tốc độ gõ (ms/ký tự)
+        <input id="typingMs" type="number" min="0" max="200">
+      </label>
+      <label>
+        Nghỉ giữa câu (ms)
+        <input id="pauseMs" type="number" min="0" max="10000" step="100">
+      </label>
+    </div>
+
+    <label class="check"><input id="autoStart" type="checkbox"> Tự chạy khi bấm nút chat trên trang</label>
+    <label class="check"><input id="freshConversation" type="checkbox"> Bắt đầu cuộc trò chuyện mới mỗi lần chạy</label>
+
+    <div class="row">
+      <button id="test" type="button">Thử sinh 1 câu hỏi</button>
+      <span id="saved" class="saved" hidden>Đã lưu ✓</span>
+    </div>
+    <p id="testOut" class="test-out" hidden></p>
+  </form>
+
+  <script src="defaults.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
